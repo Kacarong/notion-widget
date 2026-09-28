@@ -1,6 +1,6 @@
 {
   "name": "notion-desk-widget",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Notion 메모를 화면 한켠에 상시 표시하는 읽기 전용 데스크톱 위젯",
   "main": "src/main.js",
   "scripts": {
@@ -22,7 +22,8 @@
       "target": [
         "nsis",
         "portable"
-      ]
+      ],
+      "icon": "src/icon.ico"
     },
     "publish": [
       {

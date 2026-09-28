@@ -54,6 +54,7 @@ async function checkUpdateManually() {
 let win = null;
 let settingsWin = null;
 let tray = null;
+let isQuitting = false;
 
 function createWindow() {
   const cfg = cfgStore.load();
@@ -86,6 +87,11 @@ function createWindow() {
   };
   win.on('moved', persistBounds);
   win.on('resized', persistBounds);
+  win.on('close', (e) => {
+    if (!isQuitting) { e.preventDefault(); win.hide(); refreshTrayMenu(); }
+  });
+  win.on('show', refreshTrayMenu);
+  win.on('hide', refreshTrayMenu);
   win.on('closed', () => { win = null; });
 }
 
@@ -103,14 +109,39 @@ function openSettings() {
   settingsWin.on('closed', () => { settingsWin = null; });
 }
 
+function toggleWindow() {
+  if (!win || win.isDestroyed()) { createWindow(); return; }
+  if (win.isVisible()) win.hide(); else win.show();
+  refreshTrayMenu();
+}
+
 function buildTray() {
-  try {
-    tray = new Tray(path.join(__dirname, 'icon.png'));
-  } catch (_) {
-    return; // 아이콘 없으면 트레이 생략
+  const { nativeImage } = require('electron');
+  let image = nativeImage.createFromPath(path.join(__dirname, 'icon.png'));
+  if (image.isEmpty()) {
+    // 아이콘 파일이 없어도 트레이가 사라지지 않도록 최소 이미지 생성
+    image = nativeImage.createFromDataURL(
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAOklEQVR42mNgGAWjYBSMglEwCkbBKBgFo2AUjIJRMApGwSgYBaNgFIyCUTAKRsEoGAWjYBSMglEAAAeUAAHnV1QsAAAAAElFTkSuQmCC'
+    );
   }
+  try {
+    tray = new Tray(image);
+  } catch (e) {
+    console.error('[tray] 생성 실패:', e && e.message);
+    return;
+  }
+  refreshTrayMenu();
+  tray.setToolTip('Notion 메모 위젯');
+  tray.on('click', toggleWindow);        // 좌클릭: 위젯 보이기/숨기기
+  tray.on('double-click', openSettings); // 더블클릭: 설정
+}
+
+function refreshTrayMenu() {
+  if (!tray) return;
   const cfg = cfgStore.load();
+  const visible = !!(win && !win.isDestroyed() && win.isVisible());
   const menu = Menu.buildFromTemplate([
+    { label: visible ? '위젯 숨기기' : '위젯 보이기', click: toggleWindow },
     { label: '설정 열기', click: openSettings },
     { label: '지금 새로고침', click: () => win && win.webContents.send('refresh-now') },
     { label: '업데이트 확인', click: checkUpdateManually },
@@ -128,11 +159,17 @@ function buildTray() {
       click: (item) => { cfgStore.save({ clickThrough: item.checked }); applyRuntime(); },
     },
     { type: 'separator' },
-    { label: '종료', click: () => app.quit() },
+    { label: '종료', click: quitApp },
   ]);
-  tray.setToolTip('Notion 메모 위젯');
   tray.setContextMenu(menu);
-  tray.on('double-click', openSettings);
+}
+
+/** 트레이 상주 모드라도 확실히 종료되게 */
+function quitApp() {
+  isQuitting = true;
+  if (win && !win.isDestroyed()) win.destroy();
+  if (tray) { tray.destroy(); tray = null; }
+  app.quit();
 }
 
 function applyRuntime() {
@@ -180,7 +217,7 @@ ipcMain.handle('notion:test', async (_e, { token, pageId, sectionHeading }) => {
   }
 });
 ipcMain.handle('app:openSettings', () => openSettings());
-ipcMain.handle('app:quit', () => app.quit());
+ipcMain.handle('app:quit', () => quitApp());
 ipcMain.handle('app:openExternal', (_e, url) => shell.openExternal(url));
 ipcMain.handle('app:setAutoLaunch', (_e, enable) => {
   app.setLoginItemSettings({ openAtLogin: !!enable, args: [] });
