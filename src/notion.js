@@ -98,27 +98,38 @@ async function getNoteItems(token, pageIdOrUrl, opts = {}) {
   const pageId = normalizeId(pageIdOrUrl);
   let blocks = await listChildren(token, pageId);
 
-  if (sectionHeading) {
-    const target = sectionHeading.trim().toLowerCase();
-    const startIdx = blocks.findIndex(
-      (b) => HEADINGS.has(b.type) && richTextToPlain(b[b.type].rich_text).trim().toLowerCase() === target
-    );
-    if (startIdx >= 0) {
-      const startType = blocks[startIdx].type;
-      const level = Number(startType.slice(-1));
+  // 쉼표로 여러 섹션 지정 가능: "오늘 할 일, 메모" → 지정한 순서대로 이어서 표시
+  let notFoundAny = false;
+  if (sectionHeading && sectionHeading.trim()) {
+    const names = sectionHeading.split(',').map((s) => s.trim()).filter(Boolean);
+    const picked = [];
+    for (const name of names) {
+      const target = name.toLowerCase();
+      const startIdx = blocks.findIndex(
+        (b) => HEADINGS.has(b.type) && richTextToPlain(b[b.type].rich_text).trim().toLowerCase() === target
+      );
+      if (startIdx < 0) {
+        notFoundAny = true;
+        picked.push({ __missing: name });
+        continue;
+      }
+      const level = Number(blocks[startIdx].type.slice(-1));
       let endIdx = blocks.length;
       for (let i = startIdx + 1; i < blocks.length; i++) {
         const b = blocks[i];
         if (HEADINGS.has(b.type) && Number(b.type.slice(-1)) <= level) { endIdx = i; break; }
       }
-      blocks = blocks.slice(includeHeading ? startIdx : startIdx + 1, endIdx);
-    } else {
-      return { items: [{ type: 'p', text: `("${sectionHeading}" 섹션을 찾지 못했습니다)` }], notFound: true };
+      const slice = blocks.slice(includeHeading ? startIdx : startIdx + 1, endIdx);
+      if (picked.length) picked.push({ __divider: true }); // 섹션 사이 구분선
+      picked.push(...slice);
     }
+    blocks = picked;
   }
 
   const items = [];
   for (const b of blocks) {
+    if (b.__divider) { items.push({ type: 'divider', text: '' }); continue; }
+    if (b.__missing) { items.push({ type: 'p', text: `("${b.__missing}" 섹션을 찾지 못했습니다)` }); continue; }
     const item = blockToItem(b);
     if (item) items.push(item);
     if (expandToggles && b.type === 'toggle' && b.has_children) {
@@ -132,7 +143,7 @@ async function getNoteItems(token, pageIdOrUrl, opts = {}) {
     }
     if (limit && items.length >= limit) break;
   }
-  return { items: limit ? items.slice(0, limit) : items, notFound: false };
+  return { items: limit ? items.slice(0, limit) : items, notFound: notFoundAny };
 }
 
 /** 페이지 제목 조회 */

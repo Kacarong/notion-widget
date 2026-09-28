@@ -26,10 +26,10 @@
         android:textColor="#E8EDF5" android:hint="https://www.notion.so/..." android:textColorHint="#69758A"/>
 
     <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="표시할 섹션 제목 (비우면 전체)" android:textColor="#9AA7B8" android:paddingTop="8dp"/>
+        android:text="표시할 섹션 제목 (비우면 전체 · 쉼표로 여러 개)" android:textColor="#9AA7B8" android:paddingTop="8dp"/>
     <EditText android:id="@+id/section" android:layout_width="match_parent"
         android:layout_height="wrap_content" android:inputType="text"
-        android:textColor="#E8EDF5" android:hint="예: 오늘 할 일" android:textColorHint="#69758A"/>
+        android:textColor="#E8EDF5" android:hint="예: 오늘 할 일, 주간 목표" android:textColorHint="#69758A"/>
 
     <CheckBox android:id="@+id/includeHeading" android:layout_width="wrap_content"
         android:layout_height="wrap_content" android:text="섹션 제목도 표시" android:textColor="#E8EDF5"/>

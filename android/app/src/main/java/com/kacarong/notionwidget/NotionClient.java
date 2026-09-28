@@ -146,32 +146,41 @@ public class NotionClient {
         String pageId = normalizeId(pageIdOrUrl);
         List<JSONObject> blocks = listChildren(token, pageId);
 
+        // 쉼표로 여러 섹션 지정 가능: "오늘 할 일, 주간 목표"
+        List<String> missing = new ArrayList<>();
         if (sectionHeading != null && !sectionHeading.trim().isEmpty()) {
-            String target = sectionHeading.trim().toLowerCase(Locale.ROOT);
-            int start = -1, level = 0;
-            for (int i = 0; i < blocks.size(); i++) {
-                JSONObject b = blocks.get(i);
-                String t = b.optString("type");
-                if (isHeading(t)) {
-                    JSONObject d = b.optJSONObject(t);
-                    String txt = d == null ? "" : plain(d.optJSONArray("rich_text")).trim().toLowerCase(Locale.ROOT);
-                    if (txt.equals(target)) { start = i; level = Integer.parseInt(t.substring(t.length() - 1)); break; }
+            List<JSONObject> picked = new ArrayList<>();
+            for (String raw : sectionHeading.split(",")) {
+                String name = raw.trim();
+                if (name.isEmpty()) continue;
+                String target = name.toLowerCase(Locale.ROOT);
+                int start = -1, level = 0;
+                for (int i = 0; i < blocks.size(); i++) {
+                    JSONObject b = blocks.get(i);
+                    String t = b.optString("type");
+                    if (isHeading(t)) {
+                        JSONObject d = b.optJSONObject(t);
+                        String txt = d == null ? "" : plain(d.optJSONArray("rich_text")).trim().toLowerCase(Locale.ROOT);
+                        if (txt.equals(target)) { start = i; level = Integer.parseInt(t.substring(t.length() - 1)); break; }
+                    }
                 }
+                if (start < 0) { missing.add(name); continue; }
+                int end = blocks.size();
+                for (int i = start + 1; i < blocks.size(); i++) {
+                    String t = blocks.get(i).optString("type");
+                    if (isHeading(t) && Integer.parseInt(t.substring(t.length() - 1)) <= level) { end = i; break; }
+                }
+                if (!picked.isEmpty()) {
+                    try { picked.add(new JSONObject().put("type", "divider").put("divider", new JSONObject())); }
+                    catch (Exception ignored) { }
+                }
+                picked.addAll(blocks.subList(includeHeading ? start : start + 1, end));
             }
-            if (start < 0) {
-                List<Item> nf = new ArrayList<>();
-                nf.add(new Item("p", "(\"" + sectionHeading + "\" 섹션을 찾지 못했습니다)"));
-                return nf;
-            }
-            int end = blocks.size();
-            for (int i = start + 1; i < blocks.size(); i++) {
-                String t = blocks.get(i).optString("type");
-                if (isHeading(t) && Integer.parseInt(t.substring(t.length() - 1)) <= level) { end = i; break; }
-            }
-            blocks = new ArrayList<>(blocks.subList(includeHeading ? start : start + 1, end));
+            blocks = picked;
         }
 
         List<Item> items = new ArrayList<>();
+        for (String m : missing) items.add(new Item("p", "(\"" + m + "\" 섹션을 찾지 못했습니다)"));
         for (JSONObject b : blocks) {
             Item it = blockToItem(b);
             if (it != null) items.add(it);
