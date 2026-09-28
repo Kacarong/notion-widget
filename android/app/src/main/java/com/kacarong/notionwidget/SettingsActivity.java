@@ -58,6 +58,10 @@ public class SettingsActivity extends AppCompatActivity {
 
         ((Button) findViewById(R.id.saveBtn)).setOnClickListener(v -> save());
         ((Button) findViewById(R.id.testBtn)).setOnClickListener(v -> test());
+        ((Button) findViewById(R.id.updateBtn)).setOnClickListener(v -> UpdateChecker.check(this, false));
+
+        // 앱 열 때 조용히 업데이트 확인
+        UpdateChecker.check(this, true);
     }
 
     private void updateLabels() {

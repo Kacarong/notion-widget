@@ -1,6 +1,6 @@
 {
   "name": "notion-desk-widget",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Notion 메모를 화면 한켠에 상시 표시하는 읽기 전용 데스크톱 위젯",
   "main": "src/main.js",
   "scripts": {
@@ -14,7 +14,30 @@
   "build": {
     "appId": "com.kacarong.notionwidget",
     "productName": "NotionWidget",
-    "files": ["src/**/*", "package.json"],
-    "win": { "target": ["nsis", "portable"] }
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Kacarong",
+        "repo": "notion-widget"
+      }
+    ],
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false
+    }
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
   }
 }
