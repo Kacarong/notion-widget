@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Notion 메모 위젯</string>
+    <string-array name="theme_options">
+        <item>다크</item>
+        <item>라이트</item>
+    </string-array>
+</resources>
