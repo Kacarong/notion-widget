@@ -1,0 +1,20 @@
+{
+  "name": "notion-desk-widget",
+  "version": "0.1.0",
+  "description": "Notion 메모를 화면 한켠에 상시 표시하는 읽기 전용 데스크톱 위젯",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "^32.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "com.kacarong.notionwidget",
+    "productName": "NotionWidget",
+    "files": ["src/**/*", "package.json"],
+    "win": { "target": ["nsis", "portable"] }
+  }
+}

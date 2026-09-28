@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>Notion 위젯 설정</title>
+<style>
+  body { margin:0; padding:18px 20px 40px; background:#12151c; color:#e8edf5;
+    font-family:-apple-system,"Segoe UI","Malgun Gothic","Noto Sans KR",sans-serif; font-size:14px; }
+  h2 { font-size:16px; margin:18px 0 8px; padding-bottom:6px; border-bottom:1px solid #2a3242; }
+  h2:first-child { margin-top:0; }
+  label { display:block; margin:10px 0 4px; color:#9aa7b8; font-size:13px; }
+  input[type=text], input[type=password], input[type=number], select {
+    width:100%; padding:9px 10px; border-radius:8px; border:1px solid #2a3242;
+    background:#0d1017; color:#e8edf5; font-size:14px;
+  }
+  input[type=range] { width:100%; }
+  .row { display:flex; align-items:center; gap:8px; margin:9px 0; }
+  .row input[type=checkbox] { width:17px; height:17px; }
+  .row label { margin:0; color:#e8edf5; font-size:14px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  button { padding:10px 14px; border:none; border-radius:9px; background:#4f8cff; color:#fff;
+    font-size:14px; font-weight:600; cursor:pointer; }
+  button.sec { background:#222a38; }
+  .btns { display:flex; gap:8px; margin-top:16px; }
+  .hint { color:#69758a; font-size:12px; margin-top:5px; line-height:1.5; }
+  .hint a { color:#4f8cff; cursor:pointer; text-decoration:underline; }
+  #testResult { margin-top:10px; font-size:13px; white-space:pre-wrap;
+    background:#0d1017; border:1px solid #2a3242; border-radius:8px; padding:9px; max-height:150px; overflow:auto; }
+  .ok { color:#35d39a; } .err { color:#ff6b7a; }
+</style>
+</head>
+<body>
+  <h2>연결</h2>
+  <label>Notion 통합 토큰 (ntn_... 또는 secret_...)</label>
+  <input type="password" id="token" placeholder="비공개로 저장됩니다" />
+  <div class="hint">
+    <a id="openNotion">notion.so/my-integrations</a> 에서 통합 생성 → 토큰 복사.
+    그리고 보려는 페이지 우측 상단 ⋯ → "연결" → 만든 통합을 추가해야 읽을 수 있습니다.
+  </div>
+
+  <label>페이지 URL 또는 ID</label>
+  <input type="text" id="pageId" placeholder="https://www.notion.so/..." />
+
+  <label>표시할 섹션 제목 (비우면 페이지 전체)</label>
+  <input type="text" id="sectionHeading" placeholder="예: 오늘 할 일" />
+  <div class="row"><input type="checkbox" id="includeHeading" /><label for="includeHeading">섹션 제목도 표시</label></div>
+
+  <div class="grid2">
+    <div>
+      <label>최대 표시 개수 (0=전체)</label>
+      <input type="number" id="limit" min="0" />
+    </div>
+    <div>
+      <label>새로고침 간격(초)</label>
+      <input type="number" id="refreshSeconds" min="3" />
+    </div>
+  </div>
+
+  <div class="btns">
+    <button class="sec" id="testBtn">연결 테스트</button>
+  </div>
+  <div id="testResult" style="display:none"></div>
+
+  <h2>모양</h2>
+  <div class="grid2">
+    <div>
+      <label>테마</label>
+      <select id="theme">
+        <option value="dark">다크</option>
+        <option value="light">라이트</option>
+        <option value="glass">반투명 글래스</option>
+      </select>
+    </div>
+    <div>
+      <label>강조색</label>
+      <input type="text" id="accent" placeholder="#4f8cff" />
+    </div>
+  </div>
+  <label>투명도 <span id="opacityVal"></span></label>
+  <input type="range" id="opacity" min="0.3" max="1" step="0.02" />
+  <label>글자 크기 <span id="fontSizeVal"></span></label>
+  <input type="range" id="fontSize" min="10" max="24" step="1" />
+  <label>글꼴 (비우면 기본)</label>
+  <input type="text" id="fontFamily" placeholder="system 또는 'Pretendard', 'D2Coding' 등" />
+
+  <h2>동작</h2>
+  <div class="row"><input type="checkbox" id="showTitle" /><label for="showTitle">페이지 제목 표시</label></div>
+  <div class="row"><input type="checkbox" id="showCheckbox" /><label for="showCheckbox">체크박스 표시</label></div>
+  <div class="row"><input type="checkbox" id="alwaysOnTop" /><label for="alwaysOnTop">항상 위에 표시</label></div>
+  <div class="row"><input type="checkbox" id="locked" /><label for="locked">창 잠금 (이동·크기 고정)</label></div>
+  <div class="row"><input type="checkbox" id="clickThrough" /><label for="clickThrough">클릭 통과 (배경처럼 사용)</label></div>
+  <div class="row"><input type="checkbox" id="autoLaunch" /><label for="autoLaunch">PC 켜면 자동 실행</label></div>
+
+  <div class="btns">
+    <button id="saveBtn">저장</button>
+    <button class="sec" id="closeBtn">닫기</button>
+  </div>
+
+<script src="./settings.js"></script>
+</body>
+</html>
